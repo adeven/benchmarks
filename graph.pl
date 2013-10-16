@@ -92,55 +92,59 @@ sub write_chart_bs {
     my $results    = shift;
     my $series     = {};
     my $scenarios  = [ 'read', 'write', 'summed' ];
+    my $kinds      = [ 'iops', 'bw' ];
 
     ##fixed rw_ratio fixed job
 
-    for my $scenario (@$scenarios) {
-        for my $bs ( @{ $uniq_specs->{bss} } ) {
-            for my $entry (@$results) {
-                if ( $entry->{bs} == $bs ) {
-                    my $hostname = $entry->{hostname};
-                    my $job      = $entry->{jobs};
-                    my $rw_ratio = $entry->{rw_ratio};
-                    push(
-                        @{
-                            $series->{$job}->{$rw_ratio}->{$hostname}
-                              ->{$scenario}->{iops}->{keys}
-                        },
-                        $bs,
-                    );
-                    push(
-                        @{
-                            $series->{$job}->{$rw_ratio}->{$hostname}
-                              ->{$scenario}->{iops}->{vals}
-                        },
-                        $entry->{json}->{jobs}->[0]->{$scenario}->{iops}
-                    );
+    for my $kind (@$kinds) {
+        for my $scenario (@$scenarios) {
+            for my $bs ( @{ $uniq_specs->{bss} } ) {
+                for my $entry (@$results) {
+                    if ( $entry->{bs} == $bs ) {
+                        my $hostname = $entry->{hostname};
+                        my $job      = $entry->{jobs};
+                        my $rw_ratio = $entry->{rw_ratio};
+                        push(
+                            @{
+                                $series->{$job}->{$rw_ratio}->{$hostname}
+                                  ->{$scenario}->{$kind}->{keys}
+                            },
+                            $bs,
+                        );
+                        push(
+                            @{
+                                $series->{$job}->{$rw_ratio}->{$hostname}
+                                  ->{$scenario}->{$kind}->{vals}
+                            },
+                            $entry->{json}->{jobs}->[0]->{$scenario}->{$kind}
+                        );
+                    }
                 }
             }
         }
     }
 
-    for my $scenario (@$scenarios) {
-        foreach my $jobs ( keys %{$series} ) {
-            foreach my $rw_ratio ( keys %{ $series->{$jobs} } ) {
-                my $charts = [];
-                foreach my $host ( keys %{ $series->{$jobs}->{$rw_ratio} } ) {
-                    my $iops_serie = Chart::Clicker::Data::Series->new(
-                        keys =>
-                          $series->{$jobs}->{$rw_ratio}->{$host}->{$scenario}
-                          ->{iops}->{keys},
-                        values =>
-                          $series->{$jobs}->{$rw_ratio}->{$host}->{$scenario}
-                          ->{iops}->{vals},
-                        name => $host . "_${scenario}_iops",
+    for my $kind (@$kinds) {
+        for my $scenario (@$scenarios) {
+            foreach my $jobs ( keys %{$series} ) {
+                foreach my $rw_ratio ( keys %{ $series->{$jobs} } ) {
+                    my $charts = [];
+                    foreach my $host ( keys %{ $series->{$jobs}->{$rw_ratio} } )
+                    {
+                        my $serie = Chart::Clicker::Data::Series->new(
+                            keys => $series->{$jobs}->{$rw_ratio}->{$host}
+                              ->{$scenario}->{$kind}->{keys},
+                            values => $series->{$jobs}->{$rw_ratio}->{$host}
+                              ->{$scenario}->{$kind}->{vals},
+                            name => $host . "_${scenario}_${kind}",
+                        );
+                        push( @$charts, $serie );
+                    }
+                    write_series(
+                        $charts,    "rw_ratio_$rw_ratio",
+                        "job$jobs", "bs_${scenario}_${kind}",
                     );
-                    push( @$charts, $iops_serie );
                 }
-                write_series(
-                    $charts,    "rw_ratio_$rw_ratio",
-                    "job$jobs", "bs_${scenario}_iops",
-                );
             }
         }
     }
