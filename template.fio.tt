@@ -1,0 +1,17 @@
+[[%= name %]]
+directory=./bench
+size=[%= size %]
+direct=1
+rw=randrw
+refill_buffers
+norandommap
+randrepeat=0
+ioengine=libaio
+bs=[%= bs %]
+rwmixread=[%= rwmix %]
+iodepth=16
+numjobs=[%= jobs %]
+runtime=60
+group_reporting
+name=[%= name %]
+time_based

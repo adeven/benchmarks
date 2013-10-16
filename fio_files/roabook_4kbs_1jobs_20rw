@@ -1,0 +1,17 @@
+[roabook_4kbs_1jobs_20rw]
+directory=./bench
+size=1G
+direct=1
+rw=randrw
+refill_buffers
+norandommap
+randrepeat=0
+ioengine=libaio
+bs=4k
+rwmixread=20
+iodepth=16
+numjobs=1
+runtime=60
+group_reporting
+name=roabook_4kbs_1jobs_20rw
+time_based
